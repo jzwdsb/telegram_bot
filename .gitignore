@@ -1,1 +1,8 @@
 /target
+.env
+*.zip
+.claude/
+deployment/terraform/terraform.tfstate*
+deployment/terraform/terraform.tfvars*
+deployment/terraform/.terraform*
+deployment/terraform/plan*.claude/
