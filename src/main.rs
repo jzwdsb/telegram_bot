@@ -5,6 +5,7 @@ mod ai;
 mod commands;
 mod deployment;
 mod handlers;
+mod storage;
 
 use deployment::{detect_deployment_mode, run_polling_mode, DeploymentMode};
 

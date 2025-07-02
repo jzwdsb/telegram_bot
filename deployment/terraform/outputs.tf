@@ -18,6 +18,11 @@ output "cloudwatch_log_group" {
   value       = aws_cloudwatch_log_group.lambda_logs.name
 }
 
+output "dynamodb_table_name" {
+  description = "Name of the DynamoDB table for user preferences"
+  value       = aws_dynamodb_table.user_preferences.name
+}
+
 output "telegram_webhook_setup_command" {
   description = "Command to set up Telegram webhook"
   value       = "curl -X POST https://api.telegram.org/bot${var.telegram_token}/setWebhook -d 'url=${aws_lambda_function_url.telegram_bot_url.function_url}'"
@@ -32,6 +37,7 @@ output "deployment_info" {
     lambda_function     = aws_lambda_function.telegram_bot.function_name
     webhook_url         = aws_lambda_function_url.telegram_bot_url.function_url
     log_group          = aws_cloudwatch_log_group.lambda_logs.name
+    dynamodb_table     = aws_dynamodb_table.user_preferences.name
     bot_name           = var.bot_name
   }
 }
