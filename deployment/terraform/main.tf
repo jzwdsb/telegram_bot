@@ -40,7 +40,7 @@ resource "null_resource" "build_lambda" {
   }
 
   provisioner "local-exec" {
-    command = "cd ${path.module}/../.. && cargo lambda build --release"
+    command = "cd ${path.module}/../.. && cargo lambda build --release --target aarch64-unknown-linux-gnu --features lambda --no-default-features"
   }
 }
 
@@ -83,9 +83,10 @@ resource "aws_lambda_function" "telegram_bot" {
 
   environment {
     variables = {
-      RUST_LOG       = var.log_level
-      TELOXIDE_TOKEN = var.telegram_token
-      OPENAI_API_KEY = var.openai_api_key
+      RUST_LOG              = var.log_level
+      TELOXIDE_TOKEN        = var.telegram_token
+      OPENAI_API_KEY        = var.openai_api_key
+      DYNAMODB_TABLE_NAME   = aws_dynamodb_table.user_preferences.name
       # WEBHOOK_URL will be set after deployment via Lambda update
     }
   }
@@ -117,6 +118,56 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   retention_in_days = var.log_retention_days
 }
 
+# DynamoDB table for user model preferences
+resource "aws_dynamodb_table" "user_preferences" {
+  name           = "${var.bot_name}-user-preferences"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "chat_id"
+
+  attribute {
+    name = "chat_id"
+    type = "S"
+  }
+
+  # TTL for automatic cleanup of old preferences (optional)
+  ttl {
+    attribute_name = "expires_at"
+    enabled        = true
+  }
+
+  tags = {
+    Name        = "${var.bot_name}-user-preferences"
+    Environment = var.environment
+  }
+}
+
+# IAM policy for DynamoDB access
+resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
+  name = "${var.bot_name}-dynamodb-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          aws_dynamodb_table.user_preferences.arn,
+          "${aws_dynamodb_table.user_preferences.arn}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
 # Lambda permission for function URL
 resource "aws_lambda_permission" "allow_function_url" {
   statement_id  = "AllowFunctionUrlInvoke"
@@ -141,7 +192,7 @@ resource "null_resource" "update_webhook_url" {
     command = <<-EOF
       aws lambda update-function-configuration \
         --function-name ${aws_lambda_function.telegram_bot.function_name} \
-        --environment Variables="{RUST_LOG=${var.log_level},TELOXIDE_TOKEN=${var.telegram_token},OPENAI_API_KEY=${var.openai_api_key},WEBHOOK_URL=${aws_lambda_function_url.telegram_bot_url.function_url}}" \
+        --environment Variables="{RUST_LOG=${var.log_level},TELOXIDE_TOKEN=${var.telegram_token},OPENAI_API_KEY=${var.openai_api_key},DYNAMODB_TABLE_NAME=${aws_dynamodb_table.user_preferences.name},WEBHOOK_URL=${aws_lambda_function_url.telegram_bot_url.function_url}}" \
         --region ${var.aws_region}
     EOF
   }

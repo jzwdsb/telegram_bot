@@ -1,7 +1,7 @@
 use log::{info, warn};
 use teloxide::{prelude::*, utils::command::BotCommands};
 
-use crate::ai::create_ai_backend;
+use crate::ai::{create_ai_backend_with_model, get_available_models, get_current_model, set_current_model};
 
 #[derive(BotCommands, Clone, Debug)]
 #[command(
@@ -17,6 +17,8 @@ pub enum Command {
     UsernameAndAge { username: String, age: u8 },
     #[command(description = "chat with AI - send your message after the command.")]
     General(String),
+    #[command(description = "change or view current AI model - use '/model list' to see available models.")]
+    Model(String),
 }
 
 pub async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
@@ -86,9 +88,13 @@ pub async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> 
                 bot.send_chat_action(msg.chat.id, teloxide::types::ChatAction::Typing)
                     .await?;
 
-                match create_ai_backend() {
+                let chat_id = msg.chat.id.to_string();
+                let current_model = get_current_model(&chat_id).await;
+                info!("🔧 Using AI model: {current_model}");
+
+                match create_ai_backend_with_model(&current_model) {
                     Ok(ai_backend) => {
-                        info!("✅ AI backend created successfully");
+                        info!("✅ AI backend created successfully with model: {current_model}");
                         match ai_backend.chat(&message).await {
                             Ok(response) => {
                                 info!(
@@ -121,6 +127,72 @@ pub async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> 
                             msg.chat.id, error_msg
                         );
                         bot.send_message(msg.chat.id, error_msg).await?
+                    }
+                }
+            }
+        }
+        Command::Model(action) => {
+            let chat_id = msg.chat.id.to_string();
+            let action = action.trim().to_lowercase();
+            match action.as_str() {
+                "list" => {
+                    let models = get_available_models();
+                    let current = get_current_model(&chat_id).await;
+                    let mut response = format!("📋 Available AI models:\n\n");
+                    for model in &models {
+                        let indicator = if model == &current { "✅" } else { "  " };
+                        response.push_str(&format!("{indicator} {model}\n"));
+                    }
+                    response.push_str(&format!("\nCurrent model: {current}\n"));
+                    response.push_str("Use `/model <model_name>` to change models.");
+                    info!(
+                        "📤 Sending model list to chat {}: {} models available",
+                        msg.chat.id, models.len()
+                    );
+                    bot.send_message(msg.chat.id, response).await?
+                }
+                "" => {
+                    let current = get_current_model(&chat_id).await;
+                    let response = format!(
+                        "🤖 Current AI model: {current}\n\nUse `/model list` to see all available models or `/model <model_name>` to change."
+                    );
+                    info!(
+                        "📤 Sending current model info to chat {}: {current}",
+                        msg.chat.id
+                    );
+                    bot.send_message(msg.chat.id, response).await?
+                }
+                model_name => {
+                    let available_models = get_available_models();
+                    if available_models.contains(&model_name.to_string()) {
+                        match set_current_model(&chat_id, model_name.to_string()).await {
+                            Ok(()) => {
+                                let response = format!("✅ AI model changed to: {model_name}");
+                                info!(
+                                    "🔧 Model changed for chat {} to: {model_name}",
+                                    msg.chat.id
+                                );
+                                bot.send_message(msg.chat.id, response).await?
+                            }
+                            Err(e) => {
+                                let response = format!("❌ Failed to save model preference: {e}");
+                                warn!(
+                                    "❌ Failed to save model for chat {}: {e}",
+                                    msg.chat.id
+                                );
+                                bot.send_message(msg.chat.id, response).await?
+                            }
+                        }
+                    } else {
+                        let response = format!(
+                            "❌ Unknown model: {model_name}\n\nAvailable models:\n{}",
+                            get_available_models().join("\n• ")
+                        );
+                        warn!(
+                            "❌ Invalid model requested for chat {}: {model_name}",
+                            msg.chat.id
+                        );
+                        bot.send_message(msg.chat.id, response).await?
                     }
                 }
             }
