@@ -1,21 +1,20 @@
 name: Claude Code Review
 
 on:
-  pull_request:
-    types: [opened, synchronize]
-    # Skip very large PRs to avoid timeouts
-    paths-ignore:
-      - 'Cargo.lock'
-      - '*.md'
-      - 'docs/**'
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
 
 jobs:
   claude-review:
-    # Only run on smaller PRs to avoid timeouts
-    if: github.event.pull_request.additions < 500
+    # Only trigger when @claude is mentioned
+    if: |
+      (github.event.issue.pull_request || github.event.pull_request) &&
+      contains(github.event.comment.body, '@claude')
     
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -26,23 +25,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          timeout_minutes: 8
-          
-          # Direct prompt for automated review (no @claude mention needed)
-          direct_prompt: |
-            Please review this pull request focusing on:
-            - Critical bugs or security issues
-            - Code quality improvements
-            - Best practices violations
-            
-            Keep feedback concise and actionable.
+          trigger_phrase: "@claude"
           
           # Optional: Customize review based on file types
           # direct_prompt: |
