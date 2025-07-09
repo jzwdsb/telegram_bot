@@ -27,6 +27,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "alpha_vantage"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f3e66e01dfb9e632cc627eecf11876ea9f43344261fec42a9593b4ae95216c2"
+dependencies = [
+ "async-trait",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "android-tzdata"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2753,6 +2766,7 @@ checksum = "20f34339676cdcab560c9a82300c4c2581f68b9369aedf0fae86f2ff9565ff3e"
 name = "telegram_bot"
 version = "0.1.0"
 dependencies = [
+ "alpha_vantage",
  "async-openai",
  "async-trait",
  "aws-config",
@@ -2763,10 +2777,13 @@ dependencies = [
  "lambda_runtime",
  "log",
  "pretty_env_logger",
+ "reqwest",
  "serde",
  "serde_json",
  "teloxide",
+ "thiserror 1.0.69",
  "tokio",
+ "uuid",
 ]
 
 [[package]]

@@ -83,10 +83,11 @@ resource "aws_lambda_function" "telegram_bot" {
 
   environment {
     variables = {
-      RUST_LOG              = var.log_level
-      TELOXIDE_TOKEN        = var.telegram_token
-      OPENAI_API_KEY        = var.openai_api_key
-      DYNAMODB_TABLE_NAME   = aws_dynamodb_table.user_preferences.name
+      RUST_LOG                 = var.log_level
+      TELOXIDE_TOKEN           = var.telegram_token
+      OPENAI_API_KEY           = var.openai_api_key
+      ALPHA_VANTAGE_API_KEY    = var.alpha_vantage_api_key
+      DYNAMODB_TABLE_NAME      = aws_dynamodb_table.user_preferences.name
       # WEBHOOK_URL will be set after deployment via Lambda update
     }
   }
@@ -192,7 +193,7 @@ resource "null_resource" "update_webhook_url" {
     command = <<-EOF
       aws lambda update-function-configuration \
         --function-name ${aws_lambda_function.telegram_bot.function_name} \
-        --environment Variables="{RUST_LOG=${var.log_level},TELOXIDE_TOKEN=${var.telegram_token},OPENAI_API_KEY=${var.openai_api_key},DYNAMODB_TABLE_NAME=${aws_dynamodb_table.user_preferences.name},WEBHOOK_URL=${aws_lambda_function_url.telegram_bot_url.function_url}}" \
+        --environment Variables="{RUST_LOG=${var.log_level},TELOXIDE_TOKEN=${var.telegram_token},OPENAI_API_KEY=${var.openai_api_key},ALPHA_VANTAGE_API_KEY=${var.alpha_vantage_api_key},DYNAMODB_TABLE_NAME=${aws_dynamodb_table.user_preferences.name},WEBHOOK_URL=${aws_lambda_function_url.telegram_bot_url.function_url}}" \
         --region ${var.aws_region}
     EOF
   }

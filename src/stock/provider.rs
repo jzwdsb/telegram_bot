@@ -17,6 +17,8 @@ pub enum StockDataError {
     RateLimitExceeded,
     /// Stock symbol not found
     SymbolNotFound(String),
+    /// Invalid stock symbol
+    InvalidSymbol(String),
     /// Provider-specific error
     ProviderError(String),
     /// Configuration error
@@ -31,6 +33,7 @@ impl fmt::Display for StockDataError {
             StockDataError::ParseError(msg) => write!(f, "Parse error: {}", msg),
             StockDataError::RateLimitExceeded => write!(f, "Rate limit exceeded"),
             StockDataError::SymbolNotFound(symbol) => write!(f, "Symbol not found: {}", symbol),
+            StockDataError::InvalidSymbol(symbol) => write!(f, "Invalid symbol: {}", symbol),
             StockDataError::ProviderError(msg) => write!(f, "Provider error: {}", msg),
             StockDataError::ConfigError(msg) => write!(f, "Configuration error: {}", msg),
         }
@@ -38,6 +41,26 @@ impl fmt::Display for StockDataError {
 }
 
 impl Error for StockDataError {}
+
+/// Convert AlphaVantageError to StockDataError
+impl From<alpha_vantage::error::Error> for StockDataError {
+    fn from(error: alpha_vantage::error::Error) -> Self {
+        let error_msg = format!("{:?}", error);
+        
+        // Parse common error patterns from the error message
+        if error_msg.contains("Invalid API call") || error_msg.contains("symbol") {
+            StockDataError::SymbolNotFound(error_msg)
+        } else if error_msg.contains("API key") {
+            StockDataError::InvalidApiKey(error_msg)
+        } else if error_msg.contains("call frequency") || error_msg.contains("premium") {
+            StockDataError::RateLimitExceeded
+        } else if error_msg.contains("network") || error_msg.contains("connection") {
+            StockDataError::NetworkError(error_msg)
+        } else {
+            StockDataError::ProviderError(error_msg)
+        }
+    }
+}
 
 /// Stock quote data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -198,10 +221,8 @@ impl ProviderFactory {
     pub fn create(provider_type: &str) -> Result<Box<dyn StockDataProvider>, StockDataError> {
         match provider_type.to_lowercase().as_str() {
             "alpha_vantage" | "alphavantage" => {
-                // This will be implemented in alpha_vantage.rs
-                Err(StockDataError::ConfigError(
-                    "Alpha Vantage provider not yet implemented".to_string(),
-                ))
+                use crate::stock::alpha_vantage::AlphaVantageProvider;
+                Ok(Box::new(AlphaVantageProvider::new()))
             }
             _ => Err(StockDataError::ConfigError(format!(
                 "Unknown provider type: {}",
@@ -257,5 +278,38 @@ mod tests {
 
         let error = StockDataError::RateLimitExceeded;
         assert_eq!(format!("{}", error), "Rate limit exceeded");
+    }
+
+    #[test]
+    fn test_provider_factory_create_alpha_vantage() {
+        let provider = ProviderFactory::create("alpha_vantage");
+        assert!(provider.is_ok());
+    }
+
+    #[test]
+    fn test_provider_factory_create_unknown() {
+        let provider = ProviderFactory::create("unknown");
+        assert!(provider.is_err());
+    }
+
+    #[test]
+    fn test_provider_factory_available_providers() {
+        let providers = ProviderFactory::available_providers();
+        assert!(providers.contains(&"alpha_vantage"));
+    }
+
+    #[test]
+    fn test_alpha_vantage_error_conversion() {
+        // Create a mock alpha_vantage error and test conversion
+        use alpha_vantage::error::Error as AlphaVantageError;
+        
+        // Test that we can convert alpha_vantage errors to our error type
+        let alpha_error = AlphaVantageError::AlphaVantageErrorMessage("Invalid API call".to_string());
+        let stock_error: StockDataError = alpha_error.into();
+        
+        match stock_error {
+            StockDataError::SymbolNotFound(_) => {}, // Expected
+            _ => panic!("Expected SymbolNotFound error"),
+        }
     }
 }

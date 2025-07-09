@@ -44,6 +44,18 @@ variable "openai_api_key" {
   }
 }
 
+variable "alpha_vantage_api_key" {
+  description = "Alpha Vantage API key for stock market data (/price and /news commands)"
+  type        = string
+  sensitive   = true
+  default     = ""
+  
+  validation {
+    condition     = var.alpha_vantage_api_key == "" || can(regex("^[A-Z0-9]+$", var.alpha_vantage_api_key))
+    error_message = "Alpha Vantage API key must contain only uppercase letters and numbers."
+  }
+}
+
 variable "log_level" {
   description = "Rust log level (error, warn, info, debug, trace)"
   type        = string

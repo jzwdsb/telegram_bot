@@ -1,0 +1,19 @@
+# AWS Configuration
+aws_region  = "us-west-2"
+environment = "prod"
+
+# Bot Configuration
+bot_name               = "my-telegram-bot"
+telegram_token         = "1234567890:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"  # Get from @BotFather
+openai_api_key         = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"   # Optional: for AI features
+alpha_vantage_api_key  = "XXXXXXXXXXXXXXXX"                                # Optional: for stock features (/price, /news)
+
+# Logging Configuration
+log_level           = "info"
+log_retention_days  = 14
+
+# Example values:
+# aws_region options: us-west-2, us-east-1, eu-west-1, ap-southeast-1, etc.
+# environment options: dev, staging, prod
+# log_level options: error, warn, info, debug, trace
+# log_retention_days options: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, etc.

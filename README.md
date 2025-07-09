@@ -11,6 +11,7 @@ A production-ready Telegram bot implementation built with Rust using the teloxid
 - 🚀 **Dual Deployment Modes**: Automatic switching between polling (development) and webhook (production)
 - ☁️ **AWS Lambda Support**: Production-ready serverless deployment with Terraform
 - 🤖 **AI Integration**: Extensible AI backend with OpenAI ChatGPT support
+- 📈 **Stock Market Data**: Real-time stock quotes via Alpha Vantage integration
 - 💬 **Smart Group Chat**: Natural @mention handling for group conversations
 - 🔧 **Environment Detection**: Automatic mode switching based on deployment environment
 - 📝 **Comprehensive Logging**: Detailed logging with emoji indicators for easy monitoring
@@ -42,6 +43,7 @@ src/
 - Rust 1.70+ 
 - Telegram Bot Token from [@BotFather](https://t.me/BotFather)
 - OpenAI API Key (optional, for AI features)
+- Alpha Vantage API Key (optional, for stock features)
 
 ### Local Development
 
@@ -54,7 +56,10 @@ src/
 2. **Set up environment**
    ```bash
    cp .env.example .env
-   # Edit .env and add your TELOXIDE_TOKEN and OPENAI_API_KEY
+   # Edit .env and add your tokens:
+   # - TELOXIDE_TOKEN (required) - Get from @BotFather on Telegram
+   # - OPENAI_API_KEY (optional) - Get from https://platform.openai.com/api-keys
+   # - ALPHA_VANTAGE_API_KEY (optional) - Get free key from https://www.alphavantage.co/support/#api-key
    ```
 
 3. **Run locally**
@@ -72,6 +77,9 @@ The bot automatically detects it's running locally and uses polling mode.
 | `/username <name>` | Set username | `/username Alice` |
 | `/usernameandage <name> <age>` | Set username and age | `/usernameandage Bob 25` |
 | `/general <message>` | Chat with AI | `/general Hello, how are you?` |
+| `/model <name>` | Change AI model | `/model list` or `/model gpt-4` |
+| `/price <symbol>` | Get stock quote | `/price AAPL` |
+| `/news <symbol>` | Get stock news | `/news TSLA` |
 
 ### Group Chat Usage
 
@@ -139,7 +147,8 @@ curl -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook" -d "url=$W
 | Variable | Description | Required | Example |
 |----------|-------------|----------|---------|
 | `TELOXIDE_TOKEN` | Telegram Bot Token | ✅ | `1234567890:ABC...` |
-| `OPENAI_API_KEY` | OpenAI API Key | ❌ | `sk-proj-...` |
+| `OPENAI_API_KEY` | OpenAI API Key (AI features) | ❌ | `sk-proj-...` |
+| `ALPHA_VANTAGE_API_KEY` | Alpha Vantage API Key (stock features) | ❌ | `XXXXXXXXXXXXXXXX` |
 | `WEBHOOK_URL` | Webhook URL (production) | ❌ | `https://example.com/webhook` |
 | `RUST_LOG` | Log level | ❌ | `info` |
 

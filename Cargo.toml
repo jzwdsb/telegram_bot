@@ -7,7 +7,7 @@ edition = "2024"
 teloxide = { version = "0.16.0", features = ["macros", "webhooks", "rustls"], default-features = false }
 log = "0.4"
 pretty_env_logger = "0.5"
-tokio = { version =  "1.8", features = ["rt-multi-thread", "macros"] }
+tokio = { version =  "1.8", features = ["rt-multi-thread", "macros", "sync", "time"] }
 dotenvy = "0.15"
 # Web server dependencies - conditional based on deployment target
 axum = { version = "0.7", optional = true }
@@ -22,6 +22,12 @@ aws-config = "1.0"
 aws-sdk-dynamodb = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
+# Stock data APIs
+alpha_vantage = { version = "0.11.0", default-features = false, features = ["reqwest-client"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+# Additional database dependencies
+thiserror = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
 
 [features]
 default = ["axum-server"]

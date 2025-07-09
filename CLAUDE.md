@@ -225,3 +225,7 @@ The bot uses a layered configuration approach:
 2. System environment variables (production)
 3. Automatic environment detection for mode switching
 4. Manual override capabilities via `WEBHOOK_MODE`
+
+## Memories and Development Reminders
+
+- Update roadmap accordingly when project status changed 
