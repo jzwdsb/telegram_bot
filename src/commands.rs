@@ -203,69 +203,79 @@ pub async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> 
             }
         }
         Command::Price(symbol) => {
+            // Early return for empty symbol
             if symbol.trim().is_empty() {
                 let response = "Please provide a stock symbol. Example: /price AAPL";
                 info!("📤 Sending empty price command help to chat {}", msg.chat.id);
-                bot.send_message(msg.chat.id, response).await?
-            } else {
-                info!("📈 Processing price request from chat {}: '{}'", msg.chat.id, symbol);
-                
-                // Send typing indicator
-                bot.send_chat_action(msg.chat.id, teloxide::types::ChatAction::Typing).await?;
+                bot.send_message(msg.chat.id, response).await?;
+                return Ok(());
+            }
 
-                match StockService::new().await {
-                    Ok(stock_service) => {
-                        match stock_service.get_quote(&symbol).await {
-                            Ok(quote) => {
-                                let response = format_stock_quote(&quote);
-                                info!("📤 Sending stock quote to chat {} for {}: ${:.2}", msg.chat.id, quote.symbol, quote.price);
-                                bot.send_message(msg.chat.id, response).await?
-                            }
-                            Err(e) => {
-                                let response = format_stock_error(&e, Some(&symbol));
-                                warn!("❌ Stock quote request failed for chat {} ({}): {:?}", msg.chat.id, symbol, e);
-                                bot.send_message(msg.chat.id, response).await?
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        let response = "⚙️ Stock service temporarily unavailable. Please try again later.";
-                        warn!("❌ Stock service initialization failed for chat {}: {:?}", msg.chat.id, e);
-                        bot.send_message(msg.chat.id, response).await?
-                    }
+            info!("📈 Processing price request from chat {}: '{}'", msg.chat.id, symbol);
+            
+            // Send typing indicator
+            bot.send_chat_action(msg.chat.id, teloxide::types::ChatAction::Typing).await?;
+
+            // Early return for service initialization failure
+            let stock_service = match StockService::new().await {
+                Ok(service) => service,
+                Err(e) => {
+                    let response = "⚙️ Stock service temporarily unavailable. Please try again later.";
+                    warn!("❌ Stock service initialization failed for chat {}: {:?}", msg.chat.id, e);
+                    bot.send_message(msg.chat.id, response).await?;
+                    return Ok(());
+                }
+            };
+
+            // Handle quote fetching
+            match stock_service.get_quote(&symbol).await {
+                Ok(quote) => {
+                    let response = format_stock_quote(&quote);
+                    info!("📤 Sending stock quote to chat {} for {}: ${:.2}", msg.chat.id, quote.symbol, quote.price);
+                    bot.send_message(msg.chat.id, response).await?
+                }
+                Err(e) => {
+                    let response = format_stock_error(&e, Some(&symbol));
+                    warn!("❌ Stock quote request failed for chat {} ({}): {:?}", msg.chat.id, symbol, e);
+                    bot.send_message(msg.chat.id, response).await?
                 }
             }
         }
         Command::News(symbol) => {
+            // Early return for empty symbol
             if symbol.trim().is_empty() {
                 let response = "Please provide a stock symbol. Example: /news AAPL";
                 info!("📤 Sending empty news command help to chat {}", msg.chat.id);
-                bot.send_message(msg.chat.id, response).await?
-            } else {
-                info!("📰 Processing news request from chat {}: '{}'", msg.chat.id, symbol);
-                
-                // Send typing indicator
-                bot.send_chat_action(msg.chat.id, teloxide::types::ChatAction::Typing).await?;
+                bot.send_message(msg.chat.id, response).await?;
+                return Ok(());
+            }
 
-                match StockService::new().await {
-                    Ok(stock_service) => {
-                        match stock_service.get_news(&symbol).await {
-                            Ok(news) => {
-                                info!("📤 Sending stock news to chat {} for {}", msg.chat.id, symbol);
-                                bot.send_message(msg.chat.id, news).await?
-                            }
-                            Err(e) => {
-                                let response = format_stock_error(&e, Some(&symbol));
-                                warn!("❌ Stock news request failed for chat {} ({}): {:?}", msg.chat.id, symbol, e);
-                                bot.send_message(msg.chat.id, response).await?
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        let response = "⚙️ Stock service temporarily unavailable. Please try again later.";
-                        warn!("❌ Stock service initialization failed for chat {}: {:?}", msg.chat.id, e);
-                        bot.send_message(msg.chat.id, response).await?
-                    }
+            info!("📰 Processing news request from chat {}: '{}'", msg.chat.id, symbol);
+            
+            // Send typing indicator
+            bot.send_chat_action(msg.chat.id, teloxide::types::ChatAction::Typing).await?;
+
+            // Early return for service initialization failure
+            let stock_service = match StockService::new().await {
+                Ok(service) => service,
+                Err(e) => {
+                    let response = "⚙️ Stock service temporarily unavailable. Please try again later.";
+                    warn!("❌ Stock service initialization failed for chat {}: {:?}", msg.chat.id, e);
+                    bot.send_message(msg.chat.id, response).await?;
+                    return Ok(());
+                }
+            };
+
+            // Handle news fetching
+            match stock_service.get_news(&symbol).await {
+                Ok(news) => {
+                    info!("📤 Sending stock news to chat {} for {}", msg.chat.id, symbol);
+                    bot.send_message(msg.chat.id, news).await?
+                }
+                Err(e) => {
+                    let response = format_stock_error(&e, Some(&symbol));
+                    warn!("❌ Stock news request failed for chat {} ({}): {:?}", msg.chat.id, symbol, e);
+                    bot.send_message(msg.chat.id, response).await?
                 }
             }
         }
