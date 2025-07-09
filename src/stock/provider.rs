@@ -28,14 +28,14 @@ pub enum StockDataError {
 impl fmt::Display for StockDataError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StockDataError::InvalidApiKey(msg) => write!(f, "Invalid API key: {}", msg),
-            StockDataError::NetworkError(msg) => write!(f, "Network error: {}", msg),
-            StockDataError::ParseError(msg) => write!(f, "Parse error: {}", msg),
+            StockDataError::InvalidApiKey(msg) => write!(f, "Invalid API key: {msg}"),
+            StockDataError::NetworkError(msg) => write!(f, "Network error: {msg}"),
+            StockDataError::ParseError(msg) => write!(f, "Parse error: {msg}"),
             StockDataError::RateLimitExceeded => write!(f, "Rate limit exceeded"),
-            StockDataError::SymbolNotFound(symbol) => write!(f, "Symbol not found: {}", symbol),
-            StockDataError::InvalidSymbol(symbol) => write!(f, "Invalid symbol: {}", symbol),
-            StockDataError::ProviderError(msg) => write!(f, "Provider error: {}", msg),
-            StockDataError::ConfigError(msg) => write!(f, "Configuration error: {}", msg),
+            StockDataError::SymbolNotFound(symbol) => write!(f, "Symbol not found: {symbol}"),
+            StockDataError::InvalidSymbol(symbol) => write!(f, "Invalid symbol: {symbol}"),
+            StockDataError::ProviderError(msg) => write!(f, "Provider error: {msg}"),
+            StockDataError::ConfigError(msg) => write!(f, "Configuration error: {msg}"),
         }
     }
 }
@@ -45,7 +45,7 @@ impl Error for StockDataError {}
 /// Convert AlphaVantageError to StockDataError
 impl From<alpha_vantage::error::Error> for StockDataError {
     fn from(error: alpha_vantage::error::Error) -> Self {
-        let error_msg = format!("{:?}", error);
+        let error_msg = format!("{error:?}");
         
         // Parse common error patterns from the error message
         if error_msg.contains("Invalid API call") || error_msg.contains("symbol") || error_msg.contains("InvalidData") {
@@ -165,7 +165,7 @@ pub trait StockDataProvider: Send + Sync {
             match self.get_quote(symbol).await {
                 Ok(quote) => quotes.push(quote),
                 Err(e) => {
-                    log::warn!("Failed to fetch quote for {}: {}", symbol, e);
+                    log::warn!("Failed to fetch quote for {symbol}: {e}");
                     // Continue with other symbols instead of failing entirely
                 }
             }
@@ -225,8 +225,7 @@ impl ProviderFactory {
                 Ok(Box::new(AlphaVantageProvider::new()))
             }
             _ => Err(StockDataError::ConfigError(format!(
-                "Unknown provider type: {}",
-                provider_type
+                "Unknown provider type: {provider_type}"
             ))),
         }
     }

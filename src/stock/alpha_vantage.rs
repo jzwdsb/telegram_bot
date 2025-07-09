@@ -55,7 +55,7 @@ impl AlphaVantageProvider {
         // Check if we've exceeded the rate limit
         if rate_limit.requests_made >= rate_limit.requests_per_minute {
             let wait_time = Duration::from_secs(60) - now.duration_since(rate_limit.window_start);
-            log::warn!("Rate limit exceeded, would need to wait {:?}", wait_time);
+            log::warn!("Rate limit exceeded, would need to wait {wait_time:?}");
             return Err(StockDataError::RateLimitExceeded);
         }
 

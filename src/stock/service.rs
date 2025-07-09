@@ -40,7 +40,7 @@ impl StockService {
         }
 
         let symbol = symbol.trim().to_uppercase();
-        log::info!("Fetching quote for symbol: {}", symbol);
+        log::info!("Fetching quote for symbol: {symbol}");
 
         match self.provider.get_quote(&symbol).await {
             Ok(quote) => {
@@ -48,7 +48,7 @@ impl StockService {
                 Ok(quote)
             }
             Err(e) => {
-                log::error!("Failed to fetch quote for {}: {:?}", symbol, e);
+                log::error!("Failed to fetch quote for {symbol}: {e:?}");
                 Err(e)
             }
         }
@@ -61,12 +61,11 @@ impl StockService {
         }
 
         let symbol = symbol.trim().to_uppercase();
-        log::info!("News requested for symbol: {}", symbol);
+        log::info!("News requested for symbol: {symbol}");
 
         // For now, return a placeholder message since the alpha_vantage crate doesn't support news yet
         Ok(format!(
-            "📰 {} News\n\n🚧 News feature coming soon!\nCurrently using Alpha Vantage crate which doesn't yet support news API.\n\nFor now, try these alternatives:\n• Check financial news websites\n• Use the /price command for current stock data",
-            symbol
+            "📰 {symbol} News\n\n🚧 News feature coming soon!\nCurrently using Alpha Vantage crate which doesn't yet support news API.\n\nFor now, try these alternatives:\n• Check financial news websites\n• Use the /price command for current stock data"
         ))
     }
 
@@ -109,7 +108,7 @@ pub fn format_stock_quote(quote: &StockQuote) -> String {
         } else if volume >= 1_000.0 {
             format!("{:.1}K", volume / 1_000.0)
         } else {
-            format!("{:.0}", volume)
+            format!("{volume:.0}")
         }
     };
 
@@ -123,7 +122,7 @@ pub fn format_stock_quote(quote: &StockQuote) -> String {
         } else if market_cap >= 1_000_000.0 {
             format!("{:.1}M", market_cap / 1_000_000.0)
         } else {
-            format!("{:.0}", market_cap)
+            format!("{market_cap:.0}")
         }
     } else {
         "N/A".to_string()
@@ -161,7 +160,7 @@ pub fn format_stock_error(error: &StockDataError, symbol: Option<&str>) -> Strin
                     "MSFT" => "\n💡 Already correct symbol",
                     _ => "\n💡 Make sure you're using the correct ticker symbol"
                 };
-                format!("❌ Stock symbol not found: \"{}\"\nPlease check the symbol and try again.{}", upper_symbol, suggestion)
+                format!("❌ Stock symbol not found: \"{upper_symbol}\"\nPlease check the symbol and try again.{suggestion}")
             } else {
                 "❌ Invalid stock symbol\nPlease provide a valid stock symbol.".to_string()
             }

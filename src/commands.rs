@@ -143,7 +143,7 @@ pub async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> 
                 "list" => {
                     let models = get_available_models();
                     let current = get_current_model(&chat_id).await;
-                    let mut response = format!("📋 Available AI models:\n\n");
+                    let mut response = "📋 Available AI models:\n\n".to_string();
                     for model in &models {
                         let indicator = if model == &current { "✅" } else { "  " };
                         response.push_str(&format!("{indicator} {model}\n"));

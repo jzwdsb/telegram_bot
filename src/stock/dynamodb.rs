@@ -143,8 +143,7 @@ impl DynamoDbStockDatabase {
             .clone();
 
         let group_title = item.get("group_title")
-            .and_then(|v| v.as_s().ok())
-            .map(|s| s.clone());
+            .and_then(|v| v.as_s().ok()).cloned();
 
         let max_subscriptions = item.get("max_subscriptions")
             .and_then(|v| v.as_n().ok())
@@ -244,8 +243,8 @@ impl StockDatabase for DynamoDbStockDatabase {
                 ))
             }
             Err(e) => {
-                log::error!("Failed to create subscription: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to create subscription: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -272,8 +271,8 @@ impl StockDatabase for DynamoDbStockDatabase {
                 }
             }
             Err(e) => {
-                log::error!("Failed to get subscription: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to get subscription: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -299,15 +298,15 @@ impl StockDatabase for DynamoDbStockDatabase {
                     for item in items {
                         match self.item_to_subscription(item) {
                             Ok(subscription) => subscriptions.push(subscription),
-                            Err(e) => log::warn!("Failed to parse subscription: {:?}", e),
+                            Err(e) => log::warn!("Failed to parse subscription: {e:?}"),
                         }
                     }
                 }
                 Ok(subscriptions)
             }
             Err(e) => {
-                log::error!("Failed to list subscriptions: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to list subscriptions: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -330,8 +329,8 @@ impl StockDatabase for DynamoDbStockDatabase {
                 Ok(())
             }
             Err(e) => {
-                log::error!("Failed to update subscription: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to update subscription: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -350,12 +349,12 @@ impl StockDatabase for DynamoDbStockDatabase {
 
         match result {
             Ok(_) => {
-                log::info!("Deleted subscription for {} in group {}", stock_symbol, group_id);
+                log::info!("Deleted subscription for {stock_symbol} in group {group_id}");
                 Ok(())
             }
             Err(e) => {
-                log::error!("Failed to delete subscription: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to delete subscription: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -378,8 +377,8 @@ impl StockDatabase for DynamoDbStockDatabase {
         match result {
             Ok(output) => Ok(output.count() as u32),
             Err(e) => {
-                log::error!("Failed to count subscriptions: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to count subscriptions: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -408,8 +407,8 @@ impl StockDatabase for DynamoDbStockDatabase {
                 ))
             }
             Err(e) => {
-                log::error!("Failed to create group config: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to create group config: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -435,8 +434,8 @@ impl StockDatabase for DynamoDbStockDatabase {
                 }
             }
             Err(e) => {
-                log::error!("Failed to get group config: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to get group config: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -459,8 +458,8 @@ impl StockDatabase for DynamoDbStockDatabase {
                 Ok(())
             }
             Err(e) => {
-                log::error!("Failed to update group config: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to update group config: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -484,15 +483,15 @@ impl StockDatabase for DynamoDbStockDatabase {
                     for item in items {
                         match self.item_to_group_config(item) {
                             Ok(config) => configs.push(config),
-                            Err(e) => log::warn!("Failed to parse group config: {:?}", e),
+                            Err(e) => log::warn!("Failed to parse group config: {e:?}"),
                         }
                     }
                 }
                 Ok(configs)
             }
             Err(e) => {
-                log::error!("Failed to list active groups: {:?}", e);
-                Err(DatabaseError::Unknown(format!("DynamoDB error: {:?}", e)))
+                log::error!("Failed to list active groups: {e:?}");
+                Err(DatabaseError::Unknown(format!("DynamoDB error: {e:?}")))
             }
         }
     }
@@ -548,8 +547,8 @@ impl StockDatabase for DynamoDbStockDatabase {
                 Ok(())
             }
             Err(e) => {
-                log::error!("DynamoDB health check failed: {:?}", e);
-                Err(DatabaseError::ConnectionError(format!("Health check failed: {:?}", e)))
+                log::error!("DynamoDB health check failed: {e:?}");
+                Err(DatabaseError::ConnectionError(format!("Health check failed: {e:?}")))
             }
         }
     }
