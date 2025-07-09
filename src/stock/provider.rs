@@ -48,7 +48,7 @@ impl From<alpha_vantage::error::Error> for StockDataError {
         let error_msg = format!("{:?}", error);
         
         // Parse common error patterns from the error message
-        if error_msg.contains("Invalid API call") || error_msg.contains("symbol") {
+        if error_msg.contains("Invalid API call") || error_msg.contains("symbol") || error_msg.contains("InvalidData") {
             StockDataError::SymbolNotFound(error_msg)
         } else if error_msg.contains("API key") {
             StockDataError::InvalidApiKey(error_msg)

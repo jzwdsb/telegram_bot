@@ -154,7 +154,14 @@ pub fn format_stock_error(error: &StockDataError, symbol: Option<&str>) -> Strin
     match error {
         StockDataError::InvalidSymbol(_) | StockDataError::SymbolNotFound(_) => {
             if let Some(symbol) = symbol {
-                format!("❌ Stock symbol not found: \"{}\"\nPlease check the symbol and try again.", symbol.to_uppercase())
+                let upper_symbol = symbol.to_uppercase();
+                let suggestion = match upper_symbol.as_str() {
+                    "APPL" => "\n💡 Did you mean AAPL (Apple Inc.)?",
+                    "GOOG" => "\n💡 Try GOOGL (Alphabet Inc.)",
+                    "MSFT" => "\n💡 Already correct symbol",
+                    _ => "\n💡 Make sure you're using the correct ticker symbol"
+                };
+                format!("❌ Stock symbol not found: \"{}\"\nPlease check the symbol and try again.{}", upper_symbol, suggestion)
             } else {
                 "❌ Invalid stock symbol\nPlease provide a valid stock symbol.".to_string()
             }
